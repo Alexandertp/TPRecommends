@@ -1,0 +1,275 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SpotifyRecommender.ViewModels"
+        xmlns:models="clr-namespace:SpotifyRecommender.Models"
+        x:Class="SpotifyRecommender.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Spotify Recommender"
+        Width="820" Height="680"
+        MinWidth="600" MinHeight="480"
+        Background="#121212">
+
+  <Window.Styles>
+    <!-- ── Palette ─────────────────────────────────────────────────── -->
+    <Style Selector="Window">
+      <Setter Property="FontFamily" Value="Inter,Segoe UI,sans-serif"/>
+    </Style>
+
+    <!-- Cards -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#1E1E1E"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="16"/>
+      <Setter Property="Margin" Value="0,0,0,12"/>
+    </Style>
+
+    <!-- Section headings -->
+    <Style Selector="TextBlock.section-title">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#888"/>
+      <Setter Property="LetterSpacing" Value="1.5"/>
+      <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+
+    <!-- Green accent button -->
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#1DB954"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Padding" Value="18,9"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1AA34A"/>
+    </Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="#333"/>
+      <Setter Property="TextElement.Foreground" Value="#666"/>
+    </Style>
+
+    <!-- Ghost button -->
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#AAA"/>
+      <Setter Property="BorderBrush" Value="#444"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="12,7"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <!-- Input fields -->
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="#2A2A2A"/>
+      <Setter Property="Foreground" Value="#EEE"/>
+      <Setter Property="BorderBrush" Value="#444"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="CaretBrush" Value="#1DB954"/>
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="#1DB954"/>
+    </Style>
+
+    <!-- Track row -->
+    <Style Selector="Border.track-row">
+      <Setter Property="Background" Value="#242424"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+    <Style Selector="Border.track-row:pointerover">
+      <Setter Property="Background" Value="#2E2E2E"/>
+    </Style>
+
+    <!-- Labels -->
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#888"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="#666"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,20">
+      <Border Background="#1DB954" CornerRadius="16" Width="32" Height="32">
+        <TextBlock Text="♫" Foreground="White" FontSize="16"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+      <StackPanel>
+        <TextBlock Text="Spotify Recommender" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
+        <TextBlock Text="Discover music based on your recent listening" FontSize="12" Foreground="#888"/>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- ── Main scroll area ───────────────────────────────────────── -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="0">
+
+        <!-- Login / connected card -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+
+            <!-- Pre-login: centred call-to-action -->
+            <StackPanel IsVisible="{Binding !IsAuthorised}"
+                        HorizontalAlignment="Center" Spacing="10">
+              <TextBlock Text="Connect your Spotify account to see your recent tracks and get personalised recommendations."
+                         Foreground="#AAA" FontSize="13" TextWrapping="Wrap"
+                         TextAlignment="Center" MaxWidth="420"/>
+              <Button Classes="primary"
+                      Command="{Binding AuthorizeCommand}"
+                      HorizontalAlignment="Center">
+                Log in with Spotify
+              </Button>
+            </StackPanel>
+
+            <!-- Post-login: compact status row -->
+            <StackPanel IsVisible="{Binding IsAuthorised}"
+                        Orientation="Horizontal" Spacing="10">
+              <Border Background="#1A3A27" CornerRadius="14" Padding="12,6">
+                <TextBlock Text="● Connected" Foreground="#1DB954"
+                           FontSize="12" FontWeight="SemiBold"/>
+              </Border>
+              <Button Classes="ghost"
+                      Command="{Binding LoadRecentCommand}">
+                ↻  Refresh recent tracks
+              </Button>
+            </StackPanel>
+
+          </StackPanel>
+        </Border>
+
+        <!-- Audio-feature tuning (optional) -->
+        <Border Classes="card" IsVisible="{Binding HasRecentTracks}">
+          <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <CheckBox IsChecked="{Binding UseAudioFeatures}" Foreground="White">
+                Tune recommendations
+              </CheckBox>
+              <TextBlock Text="(optional)" Classes="muted" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,24,*" IsVisible="{Binding UseAudioFeatures}">
+              <!-- Energy slider -->
+              <StackPanel Grid.Column="0">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="Energy" Classes="label"/>
+                  <TextBlock Grid.Column="1" Classes="label"
+                             Text="{Binding TargetEnergy, StringFormat={}{0:F2}}"/>
+                </Grid>
+                <Slider Minimum="0" Maximum="1" Value="{Binding TargetEnergy}"
+                        Foreground="#1DB954"/>
+              </StackPanel>
+              <!-- Danceability slider -->
+              <StackPanel Grid.Column="2">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="Danceability" Classes="label"/>
+                  <TextBlock Grid.Column="1" Classes="label"
+                             Text="{Binding TargetDanceability, StringFormat={}{0:F2}}"/>
+                </Grid>
+                <Slider Minimum="0" Maximum="1" Value="{Binding TargetDanceability}"
+                        Foreground="#1DB954"/>
+              </StackPanel>
+            </Grid>
+
+            <Button Classes="primary"
+                    Command="{Binding GetRecommendationsCommand}">
+              Get recommendations
+            </Button>
+          </StackPanel>
+        </Border>
+
+        <!-- Two-column track lists -->
+        <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding HasRecentTracks}">
+
+          <!-- Recent tracks -->
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="RECENTLY PLAYED" Classes="section-title"/>
+            <ItemsControl ItemsSource="{Binding RecentTracks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:SpotifyTrack">
+                  <Border Classes="track-row">
+                    <Grid ColumnDefinitions="Auto,10,*">
+                      <!-- Album art placeholder (colour from track index via converter in a real app) -->
+                      <Border Grid.Column="0" Width="36" Height="36"
+                              CornerRadius="4" Background="#333">
+                        <TextBlock Text="♫" Foreground="#666"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      </Border>
+                      <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}"
+                                   Foreground="White" FontSize="13" FontWeight="Medium"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding ArtistNames}"
+                                   Foreground="#888" FontSize="11"
+                                   TextTrimming="CharacterEllipsis"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <!-- Recommendations -->
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="RECOMMENDED FOR YOU" Classes="section-title"
+                       IsVisible="{Binding HasRecommendations}"/>
+            <ItemsControl ItemsSource="{Binding Recommendations}"
+                          IsVisible="{Binding HasRecommendations}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:SpotifyTrack">
+                  <Border Classes="track-row">
+                    <Grid ColumnDefinitions="Auto,10,*,8,Auto">
+                      <Border Grid.Column="0" Width="36" Height="36"
+                              CornerRadius="4" Background="#1A3A27">
+                        <TextBlock Text="✦" Foreground="#1DB954"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      </Border>
+                      <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}"
+                                   Foreground="White" FontSize="13" FontWeight="Medium"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding ArtistNames}"
+                                   Foreground="#888" FontSize="11"
+                                   TextTrimming="CharacterEllipsis"/>
+                      </StackPanel>
+                      <TextBlock Grid.Column="4" Text="{Binding DurationFormatted}"
+                                 Foreground="#555" FontSize="11"
+                                 VerticalAlignment="Center"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ── Status bar ──────────────────────────────────────────────── -->
+    <Border Grid.Row="2" Background="#1A1A1A" CornerRadius="6"
+            Padding="14,8" Margin="0,12,0,0">
+      <Grid ColumnDefinitions="Auto,10,*">
+        <!-- Spinner shown while loading -->
+        <Border Grid.Column="0" Width="10" Height="10" CornerRadius="5"
+                Background="#1DB954" IsVisible="{Binding IsLoading}">
+          <!-- A real spinner would use a RotateTransform animation; this is a simple dot -->
+        </Border>
+        <TextBlock Grid.Column="2"
+                   Text="{Binding StatusMessage}"
+                   Foreground="#888" FontSize="12"
+                   VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+  </Grid>
+</Window>
