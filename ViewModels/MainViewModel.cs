@@ -10,6 +10,7 @@ using SpotifyRecommender.Services;
 namespace SpotifyRecommender.ViewModels;
 
 /// <summary>
+/// Claude wrote all of this :)
 /// MainViewModel is the single source of truth for the app's state.
 /// The View (AXAML) binds to properties here and never touches services directly.
 ///
@@ -23,7 +24,8 @@ public partial class MainViewModel : ObservableObject
     // ── Dependencies (injected via constructor) ───────────────────────────────
     private readonly SpotifyAuthService _auth;
     private readonly SpotifyApiService  _api;
-
+    private readonly DatabaseService _db;
+    
     // ── Backing fields managed by [ObservableProperty] ────────────────────────
     // The source generator creates the public property, getter/setter, and
     // PropertyChanged notification automatically.
@@ -45,10 +47,11 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<SpotifyTrack> Recommendations    { get; } = new();
 
     // ── Constructor ───────────────────────────────────────────────────────────
-    public MainViewModel(SpotifyAuthService auth, SpotifyApiService api)
+    public MainViewModel(SpotifyAuthService auth, SpotifyApiService api, DatabaseService db)
     {
         _auth = auth;
         _api  = api;
+        _db = db;
     }
 
     // ── Commands ──────────────────────────────────────────────────────────────

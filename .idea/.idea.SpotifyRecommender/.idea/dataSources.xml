@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="SpotifyDB.sqlite" uuid="b1862aa1-d896-40b5-970c-29e3e94ac091">
+    <data-source source="LOCAL" name="SpotifyDB.sqlite" uuid="5a318e6c-ba34-413b-9a46-63b95b9ec96e">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:SpotifyDB.sqlite</jdbc-url>
+      <jdbc-url>jdbc:sqlite:Sqlite/SpotifyDB.sqlite</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

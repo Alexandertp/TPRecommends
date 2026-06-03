@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using SpotifyRecommender.ViewModels;
 using SpotifyRecommender.Services;
@@ -14,12 +15,12 @@ public partial class MainWindow : Window
         // For clarity here we wire up manually.
         var http       = new System.Net.Http.HttpClient();
         var apiService = new SpotifyApiService(http);
-
+        
         // Auth service is built with current ClientId/RedirectUri when the
         // AuthorizeCommand runs (so it picks up what the user typed).
         // We pass a placeholder here; MainViewModel rebuilds it before use.
         var authService = new SpotifyAuthService(http, "", "http://localhost:8080/");
-        
-        DataContext = new MainViewModel(authService, apiService);
+        var dbService = new DatabaseService();
+        DataContext = new MainViewModel(authService, apiService, dbService);
     }
 }
