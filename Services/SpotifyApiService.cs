@@ -77,6 +77,7 @@ public class SpotifyApiService
             ["seed_tracks"]  = string.Join(",", seedTracks),
             ["seed_artists"] = string.Join(",", seedArtists),
             ["limit"]        = limit.ToString(),
+            ["seed_genres"]  = "classical,country"
         };
 
         // Merge any optional audio-feature targets (e.g. target_energy, min_tempo)

@@ -58,7 +58,7 @@ public partial class MainViewModel : ObservableObject
     // [RelayCommand] generates an IAsyncRelayCommand and wires CanExecute
     // automatically.  The View binds a Button's Command to AuthorizeCommand,
     // LoadRecentCommand, etc.
-
+    
     /// <summary>Opens the browser and runs the full PKCE OAuth flow.</summary>
     [RelayCommand(CanExecute = nameof(CanAuthorize))]
     private async Task AuthorizeAsync(CancellationToken ct)
@@ -147,7 +147,7 @@ public partial class MainViewModel : ObservableObject
     private bool CanCallApi() => IsAuthorised && AccessToken is not null;
 
     /// <summary>Calls /recommendations seeded from recent tracks.</summary>
-    [RelayCommand(CanExecute = nameof(CanRecommend))]
+    [RelayCommand]
     private async Task GetRecommendationsAsync(CancellationToken ct)
     {
         if (AccessToken is null) return;
@@ -188,11 +188,6 @@ public partial class MainViewModel : ObservableObject
             IsLoading = false;
         }
     }
-
-    private bool CanRecommend() => HasRecentTracks && !IsLoading;
-
-    partial void OnHasRecentTracksChanged(bool value) =>
-        GetRecommendationsCommand.NotifyCanExecuteChanged();
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
