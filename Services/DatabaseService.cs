@@ -36,7 +36,7 @@ public class DatabaseService
         var command = _connection.CreateCommand();
 
         string sql = @"CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY,
+        id TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,
         refresh_token TEXT NOT NULL,
         last_login TEXT NOT NULL);";
@@ -54,7 +54,7 @@ public class DatabaseService
         command.ExecuteNonQuery();
     }
     
-    public async Task CreateUser(string id, string displayName, string refreshToken, string lastLogin)
+    public void CreateUser(string id, string displayName, string refreshToken, string lastLogin)
     {
         var command = _connection.CreateCommand();
         command.CommandText = @"INSERT INTO users(id, display_name,refresh_token,last_login) VALUES($id, $display_name, $refresh_token, $last_login);";
@@ -63,6 +63,10 @@ public class DatabaseService
         command.Parameters.AddWithValue("$refresh_token", refreshToken);
         command.Parameters.AddWithValue("$last_login", lastLogin);
         command.ExecuteNonQuery();
+    }
+    public void CreateUser(DatabaseUser dbUser)
+    {
+        CreateUser(dbUser.id, dbUser.displayName, dbUser.refreshToken, dbUser.lastLogin);
     }
 
     public bool doesUserExist()
@@ -78,7 +82,29 @@ public class DatabaseService
         var command = _connection.CreateCommand();
         command.CommandText = @"SELECT * FROM users LIMIT 1;";
         var reader = command.ExecuteReader();
-        reader.Read();
+        if (!reader.Read())
+        {
+            return null;
+        }
         DatabaseUser newDBUser = new DatabaseUser();
+        newDBUser.id = reader["id"].ToString();
+        newDBUser.displayName = reader["display_name"].ToString();
+        newDBUser.refreshToken = reader["refresh_token"].ToString();
+        newDBUser.lastLogin = reader["last_login"].ToString();
+        
+        return newDBUser;
     }
+    /*
+    public List<SpotifyTrack> getRecentTracksFromDB(string id)
+    {
+        var command = _connection.CreateCommand();
+        command.CommandText = @$"SELECT * FROM tracks WHERE user_id LIKE {id};";
+        var reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            return null;
+        }
+    } 
+    */
+    
 }

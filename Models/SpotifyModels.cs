@@ -68,3 +68,8 @@ public record TokenResponse(
     [property: JsonPropertyName("refresh_token")] string? RefreshToken,
     [property: JsonPropertyName("scope")] string Scope
 );
+
+public record ProfileResponse(
+    [property: JsonPropertyName("account_id")] string AccountId,
+    [property: JsonPropertyName("display_name")] string DisplayName
+    );

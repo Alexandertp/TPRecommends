@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -41,6 +42,14 @@ public class SpotifyApiService
                        .Select(i => i.Track)
                        .DistinctBy(t => t.Id)
                        .ToList();
+    }
+
+    public async Task<ProfileResponse> GetUserAsync(string accessToken, CancellationToken ct)
+    {
+        var json = await GetAsync($"{BaseUrl}/me", accessToken, ct);
+        ProfileResponse profilrespons = JsonSerializer.Deserialize<ProfileResponse>(json);
+        
+        return profilrespons;
     }
 
     /// <summary>

@@ -65,16 +65,36 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
+            Console.WriteLine("We are in the right function");
             IsLoading     = true;
             StatusMessage = "Opening Spotify in your browser…";
+            DatabaseUser currentUser = new DatabaseUser();
+            if (_db.doesUserExist())
+            {
+                Console.WriteLine("A user in DB was found");
+                 currentUser = _db.getUserFromDB();
+                 var refreshedResponse = await _auth.GetAccessTokenFromRefreshTokenAsync(currentUser.refreshToken, ct);
+                 AccessToken = refreshedResponse.AccessToken;
+                 IsAuthorised = true;
+            }
+            else
+            {
+                Console.WriteLine("A user in db was not found");
+                // Rebuild auth service with current form values
+                var authService = BuildAuthService();
+                var token = await authService.AuthorizeAsync(ct);
 
-            // Rebuild auth service with current form values
-            var authService = BuildAuthService();
-            var token       = await authService.AuthorizeAsync(ct);
-
-            AccessToken   = token.AccessToken;
-            IsAuthorised  = true;
-            StatusMessage = "Authorised! Loading your recently played tracks…";
+                AccessToken   = token.AccessToken;
+                IsAuthorised  = true;
+                var profilrespons = await _api.GetUserAsync(AccessToken, ct);
+                DatabaseUser dbUser = new DatabaseUser();
+                dbUser.id = profilrespons.AccountId;
+                dbUser.displayName = profilrespons.DisplayName;
+                dbUser.lastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                dbUser.refreshToken = token.RefreshToken;
+                _db.CreateUser(dbUser);
+            }
+            StatusMessage = "Authorised! Loading your recently played tracks…";    
 
             await LoadRecentAsync(ct);
         }

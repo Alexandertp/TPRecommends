@@ -30,7 +30,7 @@ public class SpotifyAuthService
     public SpotifyAuthService(HttpClient http, string clientId, string redirectUri)
     {
         _http        = http;
-        _clientId    = clientId;
+        _clientId    = AppConfig.ClientId;
         _redirectUri = redirectUri;
     }
 
@@ -151,15 +151,41 @@ public class SpotifyAuthService
 
         return (code, st);
     }
+    /// <summary>
+    /// Takes a refreshToken and returns an AccessToken for use in API calls
+    ///
+    /// Af Alexander
+    /// </summary>
+    /// <param name="refreshToken"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<TokenResponse> GetAccessTokenFromRefreshTokenAsync(string refreshToken, CancellationToken ct)
+    {
+        var requestBody = new FormUrlEncodedContent(new Dictionary<string, string>()
+        {
+            ["grant_type"] = "refresh_token",
+            ["refresh_token"] = refreshToken,
+            ["client_id"] = AppConfig.ClientId,
+        });
+        var resp = await _http.PostAsync(TokenEndpoint, requestBody, ct);
+        var tokenResp = await resp.Content.ReadAsStringAsync(ct);
 
+        if (!resp.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException($"Refresh token exchange failed ({resp.StatusCode}): {tokenResp}");
+        }
+        return JsonSerializer.Deserialize<TokenResponse>(tokenResp);
+    }
+    
     private async Task<TokenResponse> ExchangeCodeAsync(string code, string verifier, CancellationToken ct)
     {
         var body = new FormUrlEncodedContent(new Dictionary<string, string>
         {
+            ["client_id"]     = _clientId,
             ["grant_type"]    = "authorization_code",
             ["code"]          = code,
             ["redirect_uri"]  = _redirectUri,
-            ["client_id"]     = _clientId,
             ["code_verifier"] = verifier,
         });
 
