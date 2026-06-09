@@ -94,6 +94,14 @@ public class DatabaseService
         
         return newDBUser;
     }
+
+    public void updateLoginOnCurrentUser(DatabaseUser currentUser)
+    {
+        var command = _connection.CreateCommand();
+        command.CommandText =
+            $@"UPDATE users SET refresh_token = '{currentUser.refreshToken}', last_login = '{currentUser.lastLogin}' WHERE id = '{currentUser.id}'";
+        command.ExecuteNonQuery();
+    }
     /*
     public List<SpotifyTrack> getRecentTracksFromDB(string id)
     {
@@ -104,7 +112,7 @@ public class DatabaseService
         {
             return null;
         }
-    } 
+    }
     */
     
 }

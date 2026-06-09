@@ -65,21 +65,21 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            Console.WriteLine("We are in the right function");
             IsLoading     = true;
             StatusMessage = "Opening Spotify in your browser…";
             DatabaseUser currentUser = new DatabaseUser();
             if (_db.doesUserExist())
             {
-                Console.WriteLine("A user in DB was found");
                  currentUser = _db.getUserFromDB();
                  var refreshedResponse = await _auth.GetAccessTokenFromRefreshTokenAsync(currentUser.refreshToken, ct);
                  AccessToken = refreshedResponse.AccessToken;
+                 currentUser.refreshToken = refreshedResponse.RefreshToken;
+                 currentUser.lastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                 _db.updateLoginOnCurrentUser(currentUser);
                  IsAuthorised = true;
             }
             else
             {
-                Console.WriteLine("A user in db was not found");
                 // Rebuild auth service with current form values
                 var authService = BuildAuthService();
                 var token = await authService.AuthorizeAsync(ct);
