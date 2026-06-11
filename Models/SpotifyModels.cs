@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace SpotifyRecommender.Models;
 
 // --- Shared primitives ---
-
+//Alle DTO-klasserne herinde er AI-genererede, men de stemmer over ens med Spotify's API.
 public record SpotifyImage(
     [property: JsonPropertyName("url")] string Url,
     [property: JsonPropertyName("width")] int? Width,

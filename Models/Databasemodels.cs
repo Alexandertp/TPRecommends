@@ -1,5 +1,5 @@
 namespace SpotifyRecommender.Models;
-
+//Alt i dette dokument er skrevet i hånden
 public class DatabaseUser
 {
     public DatabaseUser()
@@ -10,4 +10,14 @@ public class DatabaseUser
     public string displayName { get; set; }
     public string refreshToken { get; set; }
     public string lastLogin { get; set; }
+}
+
+public class DatabaseTrack
+{
+    public DatabaseTrack()
+    {
+        
+    }
+    public string name { get; set; }
+    
 }

@@ -146,46 +146,6 @@
           </StackPanel>
         </Border>
 
-        <!-- Audio-feature tuning (optional) -->
-        <Border Classes="card" IsVisible="{Binding HasRecentTracks}">
-          <StackPanel Spacing="10">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <CheckBox IsChecked="{Binding UseAudioFeatures}" Foreground="White">
-                Tune recommendations
-              </CheckBox>
-              <TextBlock Text="(optional)" Classes="muted" VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <Grid ColumnDefinitions="*,24,*" IsVisible="{Binding UseAudioFeatures}">
-              <!-- Energy slider -->
-              <StackPanel Grid.Column="0">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Text="Energy" Classes="label"/>
-                  <TextBlock Grid.Column="1" Classes="label"
-                             Text="{Binding TargetEnergy, StringFormat={}{0:F2}}"/>
-                </Grid>
-                <Slider Minimum="0" Maximum="1" Value="{Binding TargetEnergy}"
-                        Foreground="#1DB954"/>
-              </StackPanel>
-              <!-- Danceability slider -->
-              <StackPanel Grid.Column="2">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Text="Danceability" Classes="label"/>
-                  <TextBlock Grid.Column="1" Classes="label"
-                             Text="{Binding TargetDanceability, StringFormat={}{0:F2}}"/>
-                </Grid>
-                <Slider Minimum="0" Maximum="1" Value="{Binding TargetDanceability}"
-                        Foreground="#1DB954"/>
-              </StackPanel>
-            </Grid>
-
-            <Button Classes="primary"
-                    Command="{Binding GetRecommendationsCommand}">
-              Get recommendations
-            </Button>
-          </StackPanel>
-        </Border>
-
         <!-- Two-column track lists -->
         <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding HasRecentTracks}">
 
@@ -194,7 +154,7 @@
             <TextBlock Text="RECENTLY PLAYED" Classes="section-title"/>
             <ItemsControl ItemsSource="{Binding RecentTracks}">
               <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:SpotifyTrack">
+                <DataTemplate x:DataType="models:DatabaseTrack">
                   <Border Classes="track-row">
                     <Grid ColumnDefinitions="Auto,10,*">
                       <!-- Album art placeholder (colour from track index via converter in a real app) -->
@@ -204,10 +164,10 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                       </Border>
                       <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Name}"
+                        <TextBlock Text="{Binding name}"
                                    Foreground="White" FontSize="13" FontWeight="Medium"
                                    TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding ArtistNames}"
+                        <TextBlock Text=""
                                    Foreground="#888" FontSize="11"
                                    TextTrimming="CharacterEllipsis"/>
                       </StackPanel>

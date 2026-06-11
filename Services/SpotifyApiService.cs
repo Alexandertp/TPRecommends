@@ -43,7 +43,13 @@ public class SpotifyApiService
                        .DistinctBy(t => t.Id)
                        .ToList();
     }
-
+    /// <summary>
+    /// Henter en bruger asynkront.
+    /// Af Alexander
+    /// </summary>
+    /// <param name="accessToken"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public async Task<ProfileResponse> GetUserAsync(string accessToken, CancellationToken ct)
     {
         var json = await GetAsync($"{BaseUrl}/me", accessToken, ct);
@@ -94,7 +100,7 @@ public class SpotifyApiService
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
-
+    //AI-genereret
     private async Task<string> GetAsync(string url, string accessToken, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -109,7 +115,7 @@ public class SpotifyApiService
 
         return body;
     }
-
+    //AI-genereret
     private static string BuildUrl(string baseUrl, Dictionary<string, string> query)
     {
         var pairs = query.Select(kv =>

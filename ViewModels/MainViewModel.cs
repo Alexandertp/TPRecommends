@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ public partial class MainViewModel : ObservableObject
     // ── Backing fields managed by [ObservableProperty] ────────────────────────
     // The source generator creates the public property, getter/setter, and
     // PropertyChanged notification automatically.
+    //Store dele af direkte nedenstående kode er AI-genereret, og har ingen funktion
+    //Efterladt til forklaring om "Hvad nu hvis"
 
     [ObservableProperty] private string  _statusMessage = "Log in with Spotify to get started.";
     [ObservableProperty] private bool    _isLoading;
@@ -43,10 +46,11 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool    _useAudioFeatures;
 
     // ── Collections bound to ItemsControl / ListBox in the View ──────────────
-    public ObservableCollection<SpotifyTrack> RecentTracks       { get; } = new();
+    public ObservableCollection<DatabaseTrack> RecentTracks       { get; } = new();
     public ObservableCollection<SpotifyTrack> Recommendations    { get; } = new();
-
+    public DatabaseUser CurrentUser { get; set; }
     // ── Constructor ───────────────────────────────────────────────────────────
+    //Dependency injection - Kind of
     public MainViewModel(SpotifyAuthService auth, SpotifyApiService api, DatabaseService db)
     {
         _auth = auth;
@@ -59,7 +63,8 @@ public partial class MainViewModel : ObservableObject
     // automatically.  The View binds a Button's Command to AuthorizeCommand,
     // LoadRecentCommand, etc.
     
-    /// <summary>Opens the browser and runs the full PKCE OAuth flow.</summary>
+    /// <summary>Opens the browser and runs the full PKCE OAuth flow.
+    /// Af Alexander</summary>
     [RelayCommand(CanExecute = nameof(CanAuthorize))]
     private async Task AuthorizeAsync(CancellationToken ct)
     {
@@ -76,6 +81,7 @@ public partial class MainViewModel : ObservableObject
                  currentUser.refreshToken = refreshedResponse.RefreshToken;
                  currentUser.lastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                  _db.updateLoginOnCurrentUser(currentUser);
+                 
                  IsAuthorised = true;
             }
             else
@@ -87,13 +93,15 @@ public partial class MainViewModel : ObservableObject
                 AccessToken   = token.AccessToken;
                 IsAuthorised  = true;
                 var profilrespons = await _api.GetUserAsync(AccessToken, ct);
-                DatabaseUser dbUser = new DatabaseUser();
-                dbUser.id = profilrespons.AccountId;
-                dbUser.displayName = profilrespons.DisplayName;
-                dbUser.lastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                dbUser.refreshToken = token.RefreshToken;
-                _db.CreateUser(dbUser);
+
+                currentUser.id = profilrespons.AccountId;
+                currentUser.displayName = profilrespons.DisplayName;
+                currentUser.lastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                currentUser.refreshToken = token.RefreshToken;
+                _db.CreateUser(currentUser);
             }
+
+            CurrentUser = currentUser;
             StatusMessage = "Authorised! Loading your recently played tracks…";    
 
             await LoadRecentAsync(ct);
@@ -113,26 +121,45 @@ public partial class MainViewModel : ObservableObject
     }
 
     // Login is always available — no user-supplied credentials needed
+    //AI
     private bool CanAuthorize() => !IsLoading;
 
-    /// <summary>Fetches /me/player/recently-played and populates RecentTracks.</summary>
+    /// <summary>Fetches /me/player/recently-played and populates RecentTracks.
+    /// Af Alexander</summary>
     [RelayCommand(CanExecute = nameof(CanCallApi))]
     private async Task LoadRecentAsync(CancellationToken ct)
     {
         if (AccessToken is null) return;
         try
         {
-            IsLoading     = true;
-            StatusMessage = "Fetching recently played tracks…";
+            if (!_db.HasRecentTracks(CurrentUser.id))
+            {
+                IsLoading = true;
+                StatusMessage = "Fetching recently played tracks…";
 
-            var tracks = await _api.GetRecentlyPlayedAsync(AccessToken, limit: 20, ct);
+                var tracks = await _api.GetRecentlyPlayedAsync(AccessToken, limit: 20, ct);
 
-            RecentTracks.Clear();
-            foreach (var t in tracks)
-                RecentTracks.Add(t);
+                RecentTracks.Clear();
+                foreach (var t in tracks)
+                {
+                    DatabaseTrack newTrack = new DatabaseTrack();
+                    newTrack.name = t.Name;
+                    RecentTracks.Add(newTrack);   
+                }
 
-            HasRecentTracks = RecentTracks.Count > 0;
-            StatusMessage   = $"Loaded {RecentTracks.Count} recent tracks. Ready to recommend!";
+                HasRecentTracks = RecentTracks.Count > 0;
+                StatusMessage = $"Loaded {RecentTracks.Count} recent tracks. Ready to recommend!";
+                _db.SaveRecentTracks(tracks, CurrentUser.id);
+            }
+            else
+            {
+                List<DatabaseTrack> recentTracks = _db.LoadRecentTracks(CurrentUser.id);
+                foreach (var t in recentTracks)
+                {
+                    RecentTracks.Add(t);
+                }
+                HasRecentTracks = RecentTracks.Count > 0;
+            }
         }
         catch (Exception ex)
         {
@@ -146,50 +173,8 @@ public partial class MainViewModel : ObservableObject
 
     private bool CanCallApi() => IsAuthorised && AccessToken is not null;
 
-    /// <summary>Calls /recommendations seeded from recent tracks.</summary>
-    [RelayCommand]
-    private async Task GetRecommendationsAsync(CancellationToken ct)
-    {
-        if (AccessToken is null) return;
-        try
-        {
-            IsLoading     = true;
-            StatusMessage = "Generating recommendations…";
-
-            // Optionally attach audio-feature targets
-            var targets = UseAudioFeatures
-                ? new System.Collections.Generic.Dictionary<string, string>
-                  {
-                      ["target_energy"]       = TargetEnergy.ToString("F2"),
-                      ["target_danceability"] = TargetDanceability.ToString("F2"),
-                  }
-                : null;
-
-            var recs = await _api.GetRecommendationsAsync(
-                AccessToken,
-                new System.Collections.Generic.List<SpotifyTrack>(RecentTracks),
-                limit: 15,
-                targets,
-                ct);
-
-            Recommendations.Clear();
-            foreach (var t in recs)
-                Recommendations.Add(t);
-
-            HasRecommendations = Recommendations.Count > 0;
-            StatusMessage      = $"Found {Recommendations.Count} recommendations!";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Error fetching recommendations: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
     // ── Private helpers ───────────────────────────────────────────────────────
+    //AI
 
     private SpotifyAuthService BuildAuthService()
     {

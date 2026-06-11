@@ -26,7 +26,7 @@ public class SpotifyAuthService
     private readonly HttpClient _http;
     private readonly string _clientId;
     private readonly string _redirectUri;
-
+    //AI-genereret
     public SpotifyAuthService(HttpClient http, string clientId, string redirectUri)
     {
         _http        = http;
@@ -35,20 +35,20 @@ public class SpotifyAuthService
     }
 
     // ── PKCE helpers ─────────────────────────────────────────────────────────
-
+    //AI-genereret
     private static string GenerateCodeVerifier()
     {
         // 64 random bytes → 86-char base64url string (well within Spotify's 43–128 limit)
         var bytes = RandomNumberGenerator.GetBytes(64);
         return Base64UrlEncode(bytes);
     }
-
+    //AI-genereret
     private static string GenerateCodeChallenge(string verifier)
     {
         var hash = SHA256.HashData(Encoding.ASCII.GetBytes(verifier));
         return Base64UrlEncode(hash);
     }
-
+    
     private static string Base64UrlEncode(byte[] bytes) =>
         Convert.ToBase64String(bytes)
                .TrimEnd('=')
@@ -104,7 +104,6 @@ public class SpotifyAuthService
     /// </summary>
     private async Task<(string Code, string State)> WaitForCallbackAsync(CancellationToken ct)
     {
-        // _redirectUri looks like "http://127.0.0.1:5543/callback"
         // HttpListener needs the prefix to end with "/" so we strip the path
         // and re-add it — e.g. "http://127.0.0.1:5543/"
         var uri    = new Uri(_redirectUri);
@@ -177,7 +176,7 @@ public class SpotifyAuthService
         }
         return JsonSerializer.Deserialize<TokenResponse>(tokenResp);
     }
-    
+    //AI-genereret
     private async Task<TokenResponse> ExchangeCodeAsync(string code, string verifier, CancellationToken ct)
     {
         var body = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -198,7 +197,7 @@ public class SpotifyAuthService
         return JsonSerializer.Deserialize<TokenResponse>(json)
                ?? throw new InvalidOperationException("Empty token response.");
     }
-
+    //AI-genereret
     private static string BuildUrl(string baseUrl, Dictionary<string, string> query)
     {
         var sb = new StringBuilder(baseUrl).Append('?');

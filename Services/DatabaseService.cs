@@ -7,7 +7,7 @@ using System.IO;
 using SQLitePCL;
 
 namespace SpotifyRecommender.Services;
-
+//Alt i dette dokument er skrevet i hånden, uden brug af AI
 public class DatabaseService
 {
     private readonly SqliteConnection _connection;
@@ -45,11 +45,9 @@ public class DatabaseService
         //List_name viser om en sang er trukket fra recently played eller anbefalet af appen
         sql = @"CREATE TABLE IF NOT EXISTS tracks(
         user_id TEXT NOT NULL REFERENCES users(id),
-        list_name TEXT NOT NULL,
+        song_name TEXT NOT NULL,
         position INTEGER NOT NULL,
-        track_json TEXT NOT NULL,
-        saved_at TEXT NOT NULL,
-        PRIMARY KEY(user_id, list_name,position));";
+        PRIMARY KEY(user_id, song_name,position));";
         command.CommandText = sql;
         command.ExecuteNonQuery();
     }
@@ -102,6 +100,48 @@ public class DatabaseService
             $@"UPDATE users SET refresh_token = '{currentUser.refreshToken}', last_login = '{currentUser.lastLogin}' WHERE id = '{currentUser.id}'";
         command.ExecuteNonQuery();
     }
+
+    public void SaveRecentTracks(List<SpotifyTrack> tracks, string userId)
+    {
+        var command = _connection.CreateCommand();
+        command.CommandText = $@"DELETE FROM tracks where user_id = '{userId}';";
+        command.CommandText += $@"INSERT INTO tracks (user_id, song_name, position) VALUES ";
+        for (int i = 0; i < tracks.Count; i++)
+        {
+            command.CommandText += $@"('{userId}','{tracks[i].Name.Replace("'",@"''")}',{i})";
+            if (i != tracks.Count - 1)
+            {
+                command.CommandText += ", ";
+                
+            }
+        }
+        command.ExecuteNonQuery();
+    }
+
+    public bool HasRecentTracks(string userId)
+    {
+        var command = _connection.CreateCommand();
+        command.CommandText = $@"SELECT * FROM tracks  WHERE user_id = '{userId}';";
+        var reader = command.ExecuteReader();
+        return reader.Read();
+    }
+    
+    public List<DatabaseTrack> LoadRecentTracks(string userId)
+    {
+        var command = _connection.CreateCommand();
+        command.CommandText = $@"SELECT * FROM tracks WHERE user_id = '{userId}' ORDER BY position;";
+        var reader = command.ExecuteReader();
+
+        List<DatabaseTrack> SongsOut = new List<DatabaseTrack>();
+        while (reader.Read())
+        {
+            DatabaseTrack newTrack = new DatabaseTrack();
+            newTrack.name = reader["song_name"].ToString();
+            SongsOut.Add(newTrack);
+        }
+
+        return SongsOut;
+    } 
     /*
     public List<SpotifyTrack> getRecentTracksFromDB(string id)
     {
